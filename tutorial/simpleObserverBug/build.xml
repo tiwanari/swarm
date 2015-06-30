@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='Windows-31J'?>
+
+<project name="simpleObserverBug" default="compile" basedir=".">
+
+  <target name="compile">
+	<exec executable="bash" >
+	  <arg line="c:\cygwin\Swarm-2.2\bin\gcjswarm simpleObserverBug.java" />
+	</exec>
+  </target>
+  
+  <target name="clean">
+    <delete>
+      <fileset dir="." includes="*.class"/>
+      <fileset dir="." includes="*.exe"/>
+    </delete>
+  </target>
+  
+</project>
