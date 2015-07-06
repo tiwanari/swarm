@@ -7,7 +7,7 @@ import java.util.*;
  * http://www.iba.k.u-tokyo.ac.jp/software/Swarm_Software/<BR>
  * @author ‘å’J—C
  **/
- public class ForestFire{
+ public class ForestFire {
 	public static void main(String[] args) {
 		ObserverSwarm observerSwarm;
 		
