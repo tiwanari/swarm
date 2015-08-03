@@ -25,7 +25,10 @@ public class Cell extends SwarmObjectImpl {
         state = 1;
     }
 
-    public void setParams(int WorldXSize, int WorldYSize, double Cool1, double Cool2, double Cool3, double Grow1, double Grow2, double Grow3, double Fire, double Diffuse)
+    public void setParams(int WorldXSize, int WorldYSize, 
+        double Cool1, double Cool2, double Cool3, 
+        double Grow1, double Grow2, double Grow3, 
+        double Fire, double Diffuse)
     {
         worldXSize = WorldXSize;
         worldYSize = WorldYSize;
@@ -46,17 +49,25 @@ public class Cell extends SwarmObjectImpl {
 
     public void copyOldState()
     {
-        oldState=state;
-        if((offset%worldXSize) == 0) oldNeiState_1=((Cell)cellVector.atOffset(offset-1+worldXSize)).getState();
-        else oldNeiState_1 =((Cell)cellVector.atOffset(offset-1)).getState();
+        System
+        oldState = state;
         
-        if(((offset+1)%worldXSize)==0) oldNeiState_2=((Cell)cellVector.atOffset(offset+1-worldXSize)).getState();
-        else oldNeiState_2 =((Cell)cellVector.atOffset(offset+1)).getState();
+        if (offset % worldXSize == 0) 
+            oldNeiState_1 = ((Cell)cellVector.atOffset(offset - 1 + worldXSize)).getState();
+        else
+            oldNeiState_1 = ((Cell)cellVector.atOffset(offset - 1)).getState();
         
-        if((offset/worldXSize)==0) oldNeiState_3=((Cell)cellVector.atOffset(offset+worldXSize*(worldYSize-1))).getState();
-        else oldNeiState_3=((Cell)cellVector.atOffset(offset-worldXSize)).getState();
+        if ( (offset + 1) % worldXSize == 0)
+            oldNeiState_2 = ((Cell) cellVector.atOffset(offset + 1 - worldXSize)).getState();
+        else
+            oldNeiState_2 = ((Cell) cellVector.atOffset(offset + 1)).getState();
         
-        if ((offset/worldXSize) == (worldYSize-1)) 
+        if (offset / worldXSize == 0)
+            oldNeiState_3 = ((Cell) cellVector.atOffset(offset + worldXSize * (worldYSize - 1))).getState();
+        else
+            oldNeiState_3 = ((Cell) cellVector.atOffset(offset - worldXSize)).getState();
+        
+        if (offset / worldXSize == worldYSize - 1) 
             oldNeiState_4 = ((Cell) cellVector.atOffset(offset - worldXSize * (worldYSize - 1))).getState();
         else 
             oldNeiState_4 = ((Cell) cellVector.atOffset(offset + worldXSize)).getState();
@@ -66,27 +77,31 @@ public class Cell extends SwarmObjectImpl {
     {
         switch (state) {
             case 0:
-                if(Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow1) state = 1;
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow1) state = 1;
                 break;
             case 1:
-                if(Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow2) state = 2;
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow2) state = 2;
                 break;
             case 2:
-                if(Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow3) state = 3;
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow3) state = 3;
                 break;
             case 3:
-                if(Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < fire ||
-                        ((oldNeiState_1 == 4 || oldNeiState_2 == 4 || oldNeiState_3 == 4 || oldNeiState_4 == 4) &&
-                    Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < diffuse)) state = 4;
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < fire 
+                        || (
+                               (oldNeiState_1 == 4 || oldNeiState_2 == 4 || oldNeiState_3 == 4 || oldNeiState_4 == 4)
+                                    && Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < diffuse
+                           )
+                    ) 
+                        state = 4;
                 break;
             case 4:
-                if(Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool1) state = 5;
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool1) state = 5;
                 break;
             case 5:
-                if(Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool2) state = 6;
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool2) state = 6;
                 break;
             case 6:
-                if(Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool3) state = 0;
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool3) state = 0;
                 break;
         }
     }
