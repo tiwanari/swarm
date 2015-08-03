@@ -49,7 +49,6 @@ public class Cell extends SwarmObjectImpl {
 
     public void copyOldState()
     {
-        System
         oldState = state;
         
         if (offset % worldXSize == 0) 
