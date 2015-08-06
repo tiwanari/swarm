@@ -4,105 +4,158 @@ import swarm.defobj.*;
 import swarm.space.*;
 import swarm.gui.*;
 import swarm.collections.*;
+import java.util.*;
 
 public class Cell extends SwarmObjectImpl {
-    public int state, oldState, oldNeiState_1, oldNeiState_2, oldNeiState_3, oldNeiState_4;
-    double cool1, cool2, cool3, grow1, grow2, grow3, fire, diffuse;
-
+    
+    public static double kappa;
+    public static double mu;
+    public static double gamma;
+    
+    public enum Step {
+        Diffusion,
+        Freezing,
+        Attachment,
+        Melting,
+        Noise;
+        
+        Step next() {
+            Step[] vals = values();
+            int nextOrd = ordinal() + 1;
+            return nextOrd < vals.length ? vals[nextOrd] : vals[0];
+        }
+        
+        Step prev() {
+            Step[] vals = values();
+            int prevOrd = ordinal() - 1;
+            return prevOrd > -1 ? vals[prevOrd] : vals[vals.length-1];
+        }
+    };
+    
+    private Step step;
+    private boolean a;
+    private double b, c, d;
+    
     int offset;
     int worldXSize, worldYSize;
     Array cellVector;
 
-    public Cell(Zone aZone, int Offset, Array aVector)
+    /** 
+     * HoneyComb Cell which has 6 neighbors
+     */
+    public Cell(Zone zone, int offset, Array vector)
     {
-        super(aZone);
-        offset = Offset;
-        cellVector = aVector;
+        super(zone);
+        this.offset = offset;
+        this.cellVector = vector;
     }
 
     public void initialize() 
     {
-        state = 1;
+        this.step = Step.Noise;
     }
 
-    public void setParams(int WorldXSize, int WorldYSize, 
-        double Cool1, double Cool2, double Cool3, 
-        double Grow1, double Grow2, double Grow3, 
-        double Fire, double Diffuse)
+    public void setParams(int worldXSize, int worldYSize, 
+        boolean a, double b, double c, double d)
     {
-        worldXSize = WorldXSize;
-        worldYSize = WorldYSize;
-        cool1 = Cool1;
-        cool2 = Cool2;
-        cool3 = Cool3;
-        grow1 = Grow1;
-        grow2 = Grow2;
-        grow3 = Grow3;
-        fire = Fire;
-        diffuse = Diffuse;
+        this.worldXSize = worldXSize;
+        this.worldYSize = worldYSize;
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        this.d = d;
     }
-
+    
+    public boolean isAttached()
+    {
+        return a;
+    }
+    
     public int getState()
     {
-        return state;
+        if (a) return 1;
+        else return 0;
     }
-
-    public void copyOldState()
+    
+    public java.util.List<Cell> getNeighbors()
     {
-        oldState = state;
-        
-        if (offset % worldXSize == 0) 
-            oldNeiState_1 = ((Cell)cellVector.atOffset(offset - 1 + worldXSize)).getState();
-        else
-            oldNeiState_1 = ((Cell)cellVector.atOffset(offset - 1)).getState();
-        
-        if ( (offset + 1) % worldXSize == 0)
-            oldNeiState_2 = ((Cell) cellVector.atOffset(offset + 1 - worldXSize)).getState();
-        else
-            oldNeiState_2 = ((Cell) cellVector.atOffset(offset + 1)).getState();
+        // add neighbors including it self
+        java.util.List<Cell> list = new java.util.ArrayList<Cell>();
+        list.add(this);
         
         if (offset / worldXSize == 0)
-            oldNeiState_3 = ((Cell) cellVector.atOffset(offset + worldXSize * (worldYSize - 1))).getState();
+            list.add((Cell)cellVector.atOffset(offset + 0 + worldXSize * (worldYSize - 1)));
         else
-            oldNeiState_3 = ((Cell) cellVector.atOffset(offset - worldXSize)).getState();
+            list.add((Cell)cellVector.atOffset(offset + 0 - worldXSize));
+        
+        // list.add((Cell)cellVector.atOffset(offset + 1 - worldXSize));
+        
+        if (offset % worldXSize == 0) 
+            list.add((Cell)cellVector.atOffset(offset - 1 + worldXSize));
+        else
+            list.add((Cell)cellVector.atOffset(offset - 1));
+        
+        if ( (offset + 1) % worldXSize == 0)
+            list.add((Cell)cellVector.atOffset(offset + 1 - worldXSize));
+        else
+            list.add((Cell)cellVector.atOffset(offset + 1));
         
         if (offset / worldXSize == worldYSize - 1) 
-            oldNeiState_4 = ((Cell) cellVector.atOffset(offset - worldXSize * (worldYSize - 1))).getState();
-        else 
-            oldNeiState_4 = ((Cell) cellVector.atOffset(offset + worldXSize)).getState();
+            list.add((Cell)cellVector.atOffset(offset + 0 - worldXSize * (worldYSize - 1)));
+        else
+            list.add((Cell)cellVector.atOffset(offset + 0 + worldXSize));
+        
+        // list.add((Cell)cellVector.atOffset(offset + 1 + worldXSize));
+        return list;
+    }
+    
+    public int numOfCrystalOnNeighbors()
+    {
+        java.util.List<Cell> list = getNeighbors();
+        int count = 0;
+        for (Cell cell : list) {
+            if (cell.isAttached()) count++;
+        }
+        return count;
     }
 
-    public void newState()
+    public void next()
     {
-        switch (state) {
-            case 0:
-                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow1) state = 1;
+        switch (step) {
+            case Diffusion:
+            {
+                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow1) state = 1; */
                 break;
-            case 1:
-                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow2) state = 2;
+            }
+            case Freezing:
+            {
+                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow2) state = 2; */
                 break;
-            case 2:
-                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow3) state = 3;
+            }
+            case Attachment:
+            {
+                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow3) state = 3; */
                 break;
-            case 3:
-                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < fire 
-                        || (
-                               (oldNeiState_1 == 4 || oldNeiState_2 == 4 || oldNeiState_3 == 4 || oldNeiState_4 == 4)
-                                    && Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < diffuse
-                           )
-                    ) 
-                        state = 4;
+            }
+            case Melting:
+            {
+                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < fire  */
+                /*         || ( */
+                /*                (oldNeiState_1 == 4 || oldNeiState_2 == 4 || oldNeiState_3 == 4 || oldNeiState_4 == 4) */
+                /*                     && Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < diffuse */
+                /*            ) */
+                /*     )  */
+                /*         state = 4; */
                 break;
-            case 4:
-                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool1) state = 5;
+            }
+            case Noise:
+            {
+                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool1) state = 5; */
                 break;
-            case 5:
-                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool2) state = 6;
-                break;
-            case 6:
-                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool3) state = 0;
-                break;
+            }
         }
+        
+        step = step.next();
     }
 
 }

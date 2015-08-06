@@ -7,7 +7,7 @@ import swarm.defobj.*;
 import swarm.objectbase.*;
 import swarm.*;
 
-public class ObserverSwarm extends GUISwarmImpl{
+public class ObserverSwarm extends GUISwarmImpl {
     ActionGroup displayActions;
     Schedule displaySchedule;
     ModelSwarm modelSwarm;
@@ -15,27 +15,26 @@ public class ObserverSwarm extends GUISwarmImpl{
     ZoomRaster patternRaster;
     Value2dDisplay patternDisplay;
 
-    public ObserverSwarm(Zone aZone){
+    public ObserverSwarm(Zone aZone)
+    {
         super(aZone);
     }
 
-    public Object buildObjects(){
+    public Object buildObjects()
+    {
         super.buildObjects();
+        
         modelSwarm 
             = (ModelSwarm) Globals.env.lispAppArchiver.
                 getWithZone$key(Globals.env.globalZone, "modelSwarm");
+        
         Globals.env.createArchivedProbeDisplay(modelSwarm, "modelSwarm");
         getControlPanel().setStateStopped();
         modelSwarm.buildObjects();
 
         colorMap = new ColormapImpl(this);
         colorMap.setColor$ToName((byte)0, "black");
-        colorMap.setColor$ToName((byte)1, "lightgreen");
-        colorMap.setColor$ToName((byte)2, "green");
-        colorMap.setColor$ToName((byte)3, "darkgreen");
-        colorMap.setColor$ToName((byte)4, "yellow");
-        colorMap.setColor$ToName((byte)5, "orange");
-        colorMap.setColor$ToName((byte)6, "red");
+        colorMap.setColor$ToName((byte)1, "white");
 
         patternRaster = new ZoomRasterImpl(this);
         patternRaster.setColormap(colorMap);
@@ -43,7 +42,7 @@ public class ObserverSwarm extends GUISwarmImpl{
         patternRaster.setWidth$Height(
                 modelSwarm.getWorldSizeX(),
                 modelSwarm.getWorldSizeY());
-        patternRaster.setWindowTitle("forest fire model");
+        patternRaster.setWindowTitle("snowflake 2D model");
         patternRaster.pack();
 
         patternDisplay = new Value2dDisplayImpl(
@@ -51,7 +50,8 @@ public class ObserverSwarm extends GUISwarmImpl{
         return this;
     }
 
-    public Object buildActions(){
+    public Object buildActions() 
+    {
         super.buildActions();
         modelSwarm.buildActions();
         displayActions = new ActionGroupImpl(this);
@@ -75,7 +75,8 @@ public class ObserverSwarm extends GUISwarmImpl{
         return this;
     }
 
-    public Activity activateIn(Swarm context){
+    public Activity activateIn(Swarm context) 
+    {
         super.activateIn(context);
         modelSwarm.activateIn(this);
         displaySchedule.activateIn(this);
