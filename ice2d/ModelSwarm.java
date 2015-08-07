@@ -6,13 +6,14 @@ import swarm.space.*;
 import swarm.collections.*;
 
 public class ModelSwarm extends SwarmImpl {
+    public double cool1, cool2, cool3, grow1, grow2, grow3, fire, diffuse;
     public int worldXSize, worldYSize, cellNum;
 
-    PatternSpace patternSpace;
+    private PatternSpace patternSpace;
 
-    Array cellVector;
-    ActionGroup modelActions;
-    Schedule modelSchedule;
+    private Array cellVector;
+    private ActionGroup modelActions;
+    private Schedule modelSchedule;
 
     public ModelSwarm(Zone aZone)
     {
@@ -30,19 +31,17 @@ public class ModelSwarm extends SwarmImpl {
 
         Globals.env.probeLibrary.setProbeMap$For(probeMap, this.getClass());
     }
-
     public Object buildObjects()
     {
-        Cell aCell;
         patternSpace = new PatternSpace(this, worldXSize, worldYSize);
 
         cellNum = worldXSize * worldYSize;
         cellVector = new ArrayImpl(this, cellNum);
         patternSpace.setCellVector(cellVector);
 
-        for (int i = 0; i < cellNum; i++){
-            aCell = new Cell(this, i, cellVector);
-            cellVector.atOffset$put(i, aCell);
+        for (int i = 0; i < cellNum; i++) {
+            Cell cell = new Cell(this, i, cellVector);
+            cellVector.atOffset$put(i, cell);
         }
         initializeCellVector();
         return this;
@@ -50,7 +49,7 @@ public class ModelSwarm extends SwarmImpl {
 
     public void stepCellVector()
     {
-        for (int i = 0; i < cellNum; i++){
+        for (int i = 0; i < cellNum; i++) {
             ((Cell) cellVector.atOffset(i)).next();
         }
     }
@@ -58,7 +57,7 @@ public class ModelSwarm extends SwarmImpl {
     public Object buildActions()
     {
         modelActions = new ActionGroupImpl(this);
-        try{
+        try {
             modelActions.createActionTo$message(this,
                     new Selector(getClass(), "stepCellVector", false));
             modelActions.createActionTo$message(patternSpace,
@@ -99,7 +98,7 @@ public class ModelSwarm extends SwarmImpl {
     {
         for(int i = 0; i < cellNum; i++) {
             Cell cell = (Cell) cellVector.atOffset(i);
-            cell.setParams(worldXSize, worldYSize, true, 0.1, 0.2, 0.3);
+            cell.setParams(worldXSize, worldYSize, false, 0.0, 0.0, 0.3);
             cell.initialize();
         }
     }
