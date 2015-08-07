@@ -34,9 +34,7 @@ public class ModelSwarm extends SwarmImpl {
     public Object buildObjects()
     {
         Cell aCell;
-        System.out.println("model swarm");
         patternSpace = new PatternSpace(this, worldXSize, worldYSize);
-        System.out.println("model swarm");
 
         cellNum = worldXSize * worldYSize;
         cellVector = new ArrayImpl(this, cellNum);
@@ -99,11 +97,10 @@ public class ModelSwarm extends SwarmImpl {
 
     public void initializeCellVector()
     {
-        Cell aCell;
         for(int i = 0; i < cellNum; i++) {
-            aCell = (Cell) cellVector.atOffset(i);
-            aCell.setParams(worldXSize, worldYSize, true, 0.1, 0.2, 0.3);
-            aCell.initialize();
+            Cell cell = (Cell) cellVector.atOffset(i);
+            cell.setParams(worldXSize, worldYSize, true, 0.1, 0.2, 0.3);
+            cell.initialize();
         }
     }
 }
