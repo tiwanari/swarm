@@ -6,7 +6,7 @@ import swarm.space.*;
 import swarm.collections.*;
 
 public class ModelSwarm extends SwarmImpl {
-    public double cool1, cool2, cool3, grow1, grow2, grow3, fire, diffuse;
+    public double rho;
     public int worldXSize, worldYSize, cellNum;
 
     private PatternSpace patternSpace;
@@ -15,15 +15,15 @@ public class ModelSwarm extends SwarmImpl {
     private ActionGroup modelActions;
     private Schedule modelSchedule;
 
-    public ModelSwarm(Zone aZone)
+    public ModelSwarm(Zone zone)
     {
-        super(aZone);
+        super(zone);
 
         worldXSize = 100;
         worldYSize = 100;
 
         EmptyProbeMap probeMap;
-        probeMap = new EmptyProbeMapImpl(aZone, this.getClass());
+        probeMap = new EmptyProbeMapImpl(zone, this.getClass());
         probeMap.addProbe(
                 Globals.env.probeLibrary.getProbeForVariable$inClass("worldXSize", getClass()));
         probeMap.addProbe(
@@ -31,6 +31,7 @@ public class ModelSwarm extends SwarmImpl {
 
         Globals.env.probeLibrary.setProbeMap$For(probeMap, this.getClass());
     }
+    
     public Object buildObjects()
     {
         patternSpace = new PatternSpace(this, worldXSize, worldYSize);
@@ -43,12 +44,26 @@ public class ModelSwarm extends SwarmImpl {
             Cell cell = new Cell(this, i, cellVector);
             cellVector.atOffset$put(i, cell);
         }
+        
+        // Cell initialization
+        rho = 0.8;
+        Cell.kappa = 0.05;
+        Cell.mu = 0.015;
+        Cell.gamma = 0.0001;
+        Cell.alpha = 0.006;
+        Cell.beta = 2.9;
+        Cell.theta = 0.004;
+        Cell.sigma = 0.0000;
         initializeCellVector();
+        
         return this;
     }
 
     public void stepCellVector()
     {
+        for (int i = 0; i < cellNum; i++) {
+            ((Cell) cellVector.atOffset(i)).copyOldNeigborState();
+        }
         for (int i = 0; i < cellNum; i++) {
             ((Cell) cellVector.atOffset(i)).next();
         }
@@ -96,10 +111,14 @@ public class ModelSwarm extends SwarmImpl {
 
     public void initializeCellVector()
     {
-        for(int i = 0; i < cellNum; i++) {
+        for (int i = 0; i < cellNum; i++) {
             Cell cell = (Cell) cellVector.atOffset(i);
-            cell.setParams(worldXSize, worldYSize, false, 0.0, 0.0, 0.3);
+            cell.setParams(worldXSize, worldYSize, false, 0.0, 0.0, rho);
             cell.initialize();
         }
+        // center cell
+        Cell center = (Cell) cellVector.atOffset(cellNum / 2 + worldXSize / 2);
+        center.setParams(worldXSize, worldYSize, true, 0.0, 1.0, 0.0);
+        center.initialize();
     }
 }

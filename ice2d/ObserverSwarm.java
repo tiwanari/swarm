@@ -15,9 +15,9 @@ public class ObserverSwarm extends GUISwarmImpl {
     ZoomRaster patternRaster;
     Value2dDisplay patternDisplay;
 
-    public ObserverSwarm(Zone aZone)
+    public ObserverSwarm(Zone zone)
     {
-        super(aZone);
+        super(zone);
     }
 
     public Object buildObjects()
@@ -34,7 +34,7 @@ public class ObserverSwarm extends GUISwarmImpl {
 
         colorMap = new ColormapImpl(this);
         colorMap.setColor$ToName((byte)0, "black");
-        colorMap.setColor$ToName((byte)1, "white");
+        colorMap.setColor$ToName((byte)1, "blue");
 
         patternRaster = new ZoomRasterImpl(this);
         patternRaster.setColormap(colorMap);
@@ -65,7 +65,7 @@ public class ObserverSwarm extends GUISwarmImpl {
                     getActionCache(),
                     new Selector(getActionCache().getClass(), "doTkEvents", true));
         } catch (Exception e) {
-            System.out.println ("Exception: " + e.getMessage ());
+            System.out.println ("Exception: " + e.getMessage());
             System.exit(1);
         }
 

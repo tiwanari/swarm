@@ -11,6 +11,10 @@ public class Cell extends SwarmObjectImpl {
     public static double kappa;
     public static double mu;
     public static double gamma;
+    public static double theta;
+    public static double sigma;
+    public static double alpha;
+    public static double beta;
     
     public enum Step {
         Diffusion,
@@ -35,6 +39,8 @@ public class Cell extends SwarmObjectImpl {
     private Step step;
     private boolean a;
     private double b, c, d;
+    private int prevNumOfCrystal = 0;
+    private double prevDiffusiveMass = 0;
     
     int offset;
     int worldXSize, worldYSize;
@@ -52,7 +58,7 @@ public class Cell extends SwarmObjectImpl {
 
     public void initialize() 
     {
-        this.step = Step.Noise;
+        this.step = Step.Diffusion;
     }
 
     public void setParams(int worldXSize, int worldYSize, 
@@ -71,6 +77,21 @@ public class Cell extends SwarmObjectImpl {
         return a;
     }
     
+    public double boundaryMass()
+    {
+        return b;
+    }
+    
+    public double crystalMass()
+    {
+        return c;
+    }
+    
+    public double diffusiveMass()
+    {
+        return d;
+    }
+    
     public int getState()
     {
         if (a) return 1;
@@ -83,29 +104,30 @@ public class Cell extends SwarmObjectImpl {
         java.util.List<Cell> list = new java.util.ArrayList<Cell>();
         list.add(this);
         
-        if (offset / worldXSize == 0)
-            list.add((Cell)cellVector.atOffset(offset + 0 + worldXSize * (worldYSize - 1)));
-        else
+        // top-left
+        if (offset / worldXSize != 0) {
             list.add((Cell)cellVector.atOffset(offset + 0 - worldXSize));
+            // top-right
+            if ( (offset + 1) % worldXSize != 0)
+                list.add((Cell)cellVector.atOffset(offset + 1 - worldXSize));
+        }
         
-        // list.add((Cell)cellVector.atOffset(offset + 1 - worldXSize));
-        
-        if (offset % worldXSize == 0) 
-            list.add((Cell)cellVector.atOffset(offset - 1 + worldXSize));
-        else
+        // left
+        if (offset % worldXSize != 0) 
             list.add((Cell)cellVector.atOffset(offset - 1));
         
-        if ( (offset + 1) % worldXSize == 0)
-            list.add((Cell)cellVector.atOffset(offset + 1 - worldXSize));
-        else
+        // right
+        if ( (offset + 1) % worldXSize != 0)
             list.add((Cell)cellVector.atOffset(offset + 1));
         
-        if (offset / worldXSize == worldYSize - 1) 
-            list.add((Cell)cellVector.atOffset(offset + 0 - worldXSize * (worldYSize - 1)));
-        else
+        // bottom-right
+        if (offset / worldXSize != worldYSize - 1) {
             list.add((Cell)cellVector.atOffset(offset + 0 + worldXSize));
+            // bottom-left
+            if (offset % worldXSize != 0) 
+                list.add((Cell)cellVector.atOffset(offset - 1 + worldXSize));
+        }
         
-        // list.add((Cell)cellVector.atOffset(offset + 1 + worldXSize));
         return list;
     }
     
@@ -118,42 +140,92 @@ public class Cell extends SwarmObjectImpl {
         }
         return count;
     }
+    
+    public double calcTotalDiffusiveMassOnNeighbors() {
+        java.util.List<Cell> cells = getNeighbors();
+        double total = 0.0;
+        for (Cell cell : cells) {
+            if (cell.isAttached())
+                total += this.diffusiveMass();
+            else
+                total += cell.diffusiveMass();
+        }
+        return total;
+    }
 
+    public void copyOldNeigborState()
+    {
+        prevNumOfCrystal = numOfCrystalOnNeighbors();
+        prevDiffusiveMass = calcTotalDiffusiveMassOnNeighbors();
+    }
+    
     public void next()
     {
+        // this cell is already attached
+        if (a) return;
+        
         switch (step) {
             case Diffusion:
             {
-                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow1) state = 1; */
+                if (numOfCrystalOnNeighbors() != 0) break;
+                d = 1 / 7 * prevDiffusiveMass;
                 break;
             }
             case Freezing:
             {
-                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow2) state = 2; */
+                b += (1 - kappa) * d;
+                c += kappa * d;
+                d = 0;
                 break;
             }
             case Attachment:
             {
-                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < grow3) state = 3; */
+                int count = prevNumOfCrystal;
+                if (count == 1 || count == 2) {
+                    if (b >= beta) a = true;
+                }
+                else if (count == 3) {
+                    if (b >= beta 
+                        || (prevDiffusiveMass < theta && b >= alpha))
+                        a = true;
+                }
+                else if (count >= 4) {
+                    a = true;
+                }
+                
+                if (a) {
+                    c += b;
+                    b = 0;
+                }
                 break;
             }
             case Melting:
             {
-                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < fire  */
-                /*         || ( */
-                /*                (oldNeiState_1 == 4 || oldNeiState_2 == 4 || oldNeiState_3 == 4 || oldNeiState_4 == 4) */
-                /*                     && Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < diffuse */
-                /*            ) */
-                /*     )  */
-                /*         state = 4; */
+                d = d + mu * b + gamma * c;
+                b *= (1 - mu);
+                c *= (1 - gamma);
                 break;
             }
             case Noise:
             {
-                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < cool1) state = 5; */
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < 0.5)
+                    d *= (1 + sigma);
+                else 
+                    d *= (1 - sigma);
                 break;
             }
         }
+        if (prevNumOfCrystal != 0)
+            System.out.println("(a, b, c, d) = " + a + ", " + b + ", " + c + ", " + d);
+        /* System.out.println("kappa = " + kappa); */
+        /* System.out.println("mu = " + mu); */
+        /* System.out.println("mu = " + mu); */
+        /* System.out.println("gamma = " + gamma); */
+        /* System.out.println("alpha = " + alpha); */
+        /* System.out.println("beta = " + beta); */
+        /* System.out.println("theta = " + theta); */
+        /* System.out.println("sigma = " + sigma); */
+        if (a) System.out.println("changed!");
         
         step = step.next();
     }
