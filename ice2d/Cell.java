@@ -155,8 +155,9 @@ public class Cell extends SwarmObjectImpl {
 
     public void copyOldNeigborState()
     {
+        int count = getNeighbors().size();
         prevNumOfCrystal = numOfCrystalOnNeighbors();
-        prevDiffusiveMass = calcTotalDiffusiveMassOnNeighbors();
+        prevDiffusiveMass = calcTotalDiffusiveMassOnNeighbors() / count;
     }
     
     public void next()
@@ -167,12 +168,12 @@ public class Cell extends SwarmObjectImpl {
         switch (step) {
             case Diffusion:
             {
-                if (numOfCrystalOnNeighbors() != 0) break;
-                d = 1 / 7 * prevDiffusiveMass;
+                d = prevDiffusiveMass;
                 break;
             }
             case Freezing:
             {
+                if (prevNumOfCrystal == 0) break;
                 b += (1 - kappa) * d;
                 c += kappa * d;
                 d = 0;
@@ -180,6 +181,7 @@ public class Cell extends SwarmObjectImpl {
             }
             case Attachment:
             {
+                if (prevNumOfCrystal == 0) break;
                 int count = prevNumOfCrystal;
                 if (count == 1 || count == 2) {
                     if (b >= beta) a = true;
@@ -201,31 +203,21 @@ public class Cell extends SwarmObjectImpl {
             }
             case Melting:
             {
-                d = d + mu * b + gamma * c;
+                if (prevNumOfCrystal == 0) break;
+                d += mu * b + gamma * c;
                 b *= (1 - mu);
                 c *= (1 - gamma);
                 break;
             }
             case Noise:
             {
-                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < 0.5)
-                    d *= (1 + sigma);
-                else 
-                    d *= (1 - sigma);
+                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < 0.5) */
+                /*     d *= (1 + sigma); */
+                /* else  */
+                /*     d *= (1 - sigma); */
                 break;
             }
         }
-        if (prevNumOfCrystal != 0)
-            System.out.println("(a, b, c, d) = " + a + ", " + b + ", " + c + ", " + d);
-        /* System.out.println("kappa = " + kappa); */
-        /* System.out.println("mu = " + mu); */
-        /* System.out.println("mu = " + mu); */
-        /* System.out.println("gamma = " + gamma); */
-        /* System.out.println("alpha = " + alpha); */
-        /* System.out.println("beta = " + beta); */
-        /* System.out.println("theta = " + theta); */
-        /* System.out.println("sigma = " + sigma); */
-        if (a) System.out.println("changed!");
         
         step = step.next();
     }

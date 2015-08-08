@@ -4,6 +4,8 @@ import swarm.defobj.*;
 import swarm.objectbase.*;
 import swarm.space.*;
 import swarm.collections.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class ModelSwarm extends SwarmImpl {
     public double rho;
@@ -19,8 +21,8 @@ public class ModelSwarm extends SwarmImpl {
     {
         super(zone);
 
-        worldXSize = 100;
-        worldYSize = 100;
+        worldXSize = 500;
+        worldYSize = 500;
 
         EmptyProbeMap probeMap;
         probeMap = new EmptyProbeMapImpl(zone, this.getClass());
@@ -59,14 +61,91 @@ public class ModelSwarm extends SwarmImpl {
         return this;
     }
 
+    static int iter = 0;
+    static int div = 10;
     public void stepCellVector()
     {
-        for (int i = 0; i < cellNum; i++) {
-            ((Cell) cellVector.atOffset(i)).copyOldNeigborState();
+        ++iter;
+        if (iter % div == 0) {
+            System.out.println("#cell = " + cellNum + ", #iter = " + iter);
+            div *= 10;
         }
-        for (int i = 0; i < cellNum; i++) {
-            ((Cell) cellVector.atOffset(i)).next();
+        
+        int numCores = Runtime.getRuntime().availableProcessors();
+        /* int numCores = 4; */
+
+        for (int s = 0; s < Cell.Step.values().length; s++) {
+            {
+                for (int i = 0; i < cellNum; i++) {
+                    final Cell cell 
+                        = ((Cell) cellVector.atOffset(i));
+                    cell.copyOldNeigborState();
+                }
+            }
+
+            {
+                for (int i = 0; i < cellNum; i++) {
+                    final Cell cell 
+                        = ((Cell) cellVector.atOffset(i));
+                    cell.next();
+                }
+            }
         }
+        /* for (int s = 0; s < Cell.Step.values().length; s++) { */
+        /*     { */
+        /*         ExecutorService threadPool  */
+        /*             = Executors.newFixedThreadPool(numCores); */
+        /*         java.util.Collection<Callable<Void>> processes  */
+        /*             = new java.util.LinkedList<Callable<Void>>(); */
+        /*  */
+        /*         for (int i = 0; i < cellNum; i++) { */
+        /*             final Cell cell  */
+        /*                 = ((Cell) cellVector.atOffset(i)); */
+        /*             processes.add(new Callable<Void>() { */
+        /*                 @Override */
+        /*                 public Void call() { */
+        /*                     cell.copyOldNeigborState(); */
+        /*                     return null; */
+        /*                 } */
+        /*             }); */
+        /*         } */
+        /*  */
+        /*         try { */
+        /*             threadPool.invokeAll(processes); */
+        /*         } catch (InterruptedException e) { */
+        /*             throw new RuntimeException(e); */
+        /*         } finally { */
+        /*             threadPool.shutdown(); */
+        /*         } */
+        /*     } */
+        /*  */
+        /*     { */
+        /*         ExecutorService threadPool  */
+        /*             = Executors.newFixedThreadPool(numCores); */
+        /*         java.util.Collection<Callable<Void>> processes  */
+        /*             = new java.util.LinkedList<Callable<Void>>(); */
+        /*  */
+        /*         for (int i = 0; i < cellNum; i++) { */
+        /*             final Cell cell  */
+        /*                 = ((Cell) cellVector.atOffset(i)); */
+        /*             processes.add(new Callable<Void>() { */
+        /*                 @Override */
+        /*                 public Void call() { */
+        /*                     cell.next(); */
+        /*                     return null; */
+        /*                 } */
+        /*             }); */
+        /*         } */
+        /*  */
+        /*         try { */
+        /*             threadPool.invokeAll(processes); */
+        /*         } catch (InterruptedException e) { */
+        /*             throw new RuntimeException(e); */
+        /*         } finally { */
+        /*             threadPool.shutdown(); */
+        /*         } */
+        /*     } */
+        /* } */
     }
 
     public Object buildActions()
