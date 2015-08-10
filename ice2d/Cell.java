@@ -187,7 +187,7 @@ public class Cell extends SwarmObjectImpl {
                     if (b >= beta) a = true;
                 }
                 else if (count == 3) {
-                    if (b >= beta 
+                    if (b >= 1 
                         || (prevDiffusiveMass < theta && b >= alpha))
                         a = true;
                 }
@@ -211,10 +211,10 @@ public class Cell extends SwarmObjectImpl {
             }
             case Noise:
             {
-                /* if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < 0.5) */
-                /*     d *= (1 + sigma); */
-                /* else  */
-                /*     d *= (1 - sigma); */
+                if (Globals.env.uniformDblRand.getDoubleWithMin$withMax(0.0, 1.0) < 0.5)
+                    d *= (1 + sigma);
+                else 
+                    d *= (1 - sigma);
                 break;
             }
         }

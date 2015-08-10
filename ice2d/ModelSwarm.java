@@ -21,8 +21,8 @@ public class ModelSwarm extends SwarmImpl {
     {
         super(zone);
 
-        worldXSize = 500;
-        worldYSize = 500;
+        worldXSize = 100;
+        worldYSize = 100;
 
         EmptyProbeMap probeMap;
         probeMap = new EmptyProbeMapImpl(zone, this.getClass());
@@ -33,7 +33,7 @@ public class ModelSwarm extends SwarmImpl {
 
         Globals.env.probeLibrary.setProbeMap$For(probeMap, this.getClass());
     }
-    
+
     public Object buildObjects()
     {
         patternSpace = new PatternSpace(this, worldXSize, worldYSize);
@@ -46,7 +46,7 @@ public class ModelSwarm extends SwarmImpl {
             Cell cell = new Cell(this, i, cellVector);
             cellVector.atOffset$put(i, cell);
         }
-        
+
         // Cell initialization
         rho = 0.8;
         Cell.kappa = 0.05;
@@ -57,22 +57,20 @@ public class ModelSwarm extends SwarmImpl {
         Cell.theta = 0.004;
         Cell.sigma = 0.0000;
         initializeCellVector();
-        
+
         return this;
     }
 
     static int iter = 0;
     static int div = 10;
+    static int setSize = 30;
     public void stepCellVector()
     {
         ++iter;
-        if (iter % div == 0) {
-            System.out.println("#cell = " + cellNum + ", #iter = " + iter);
-            div *= 10;
-        }
-        
-        int numCores = Runtime.getRuntime().availableProcessors();
-        /* int numCores = 4; */
+        /* if (iter % div == 0) { */
+            System.out.println("#iter = " + iter);
+        /*     div *= 10; */
+        /* } */
 
         for (int s = 0; s < Cell.Step.values().length; s++) {
             {
@@ -91,47 +89,62 @@ public class ModelSwarm extends SwarmImpl {
                 }
             }
         }
+        /* int numCores = Runtime.getRuntime().availableProcessors(); */
+        /* ExecutorService threadPool */
+        /*     = Executors.newFixedThreadPool(numCores); */
+        /*  */
         /* for (int s = 0; s < Cell.Step.values().length; s++) { */
         /*     { */
-        /*         ExecutorService threadPool  */
-        /*             = Executors.newFixedThreadPool(numCores); */
-        /*         java.util.Collection<Callable<Void>> processes  */
+        /*         java.util.Collection<Callable<Void>> processes */
         /*             = new java.util.LinkedList<Callable<Void>>(); */
-        /*  */
-        /*         for (int i = 0; i < cellNum; i++) { */
-        /*             final Cell cell  */
-        /*                 = ((Cell) cellVector.atOffset(i)); */
+        /*         final Cell[] cells */
+        /*             = new Cell[setSize]; */
+        /*         int i; */
+        /*         for (i = 0; i < cellNum - setSize; i += setSize) { */
+        /*             for (int j = 0; j < setSize; j++) { */
+        /*                 cells[j] = ((Cell) cellVector.atOffset(i + j)); */
+        /*             } */
         /*             processes.add(new Callable<Void>() { */
         /*                 @Override */
         /*                 public Void call() { */
-        /*                     cell.copyOldNeigborState(); */
+        /*                     for (int j = 0; j < setSize; j++) { */
+        /*                         cells[j].copyOldNeigborState(); */
+        /*                     } */
         /*                     return null; */
         /*                 } */
         /*             }); */
         /*         } */
-        /*  */
+        /*          */
         /*         try { */
         /*             threadPool.invokeAll(processes); */
         /*         } catch (InterruptedException e) { */
         /*             throw new RuntimeException(e); */
-        /*         } finally { */
-        /*             threadPool.shutdown(); */
+        /*         } */
+        /*          */
+        /*         for (; i < cellNum; i++) { */
+        /*             final Cell cell  */
+        /*                 = ((Cell) cellVector.atOffset(i)); */
+        /*             cell.copyOldNeigborState(); */
         /*         } */
         /*     } */
         /*  */
         /*     { */
-        /*         ExecutorService threadPool  */
-        /*             = Executors.newFixedThreadPool(numCores); */
-        /*         java.util.Collection<Callable<Void>> processes  */
+        /*         java.util.Collection<Callable<Void>> processes */
         /*             = new java.util.LinkedList<Callable<Void>>(); */
         /*  */
-        /*         for (int i = 0; i < cellNum; i++) { */
-        /*             final Cell cell  */
-        /*                 = ((Cell) cellVector.atOffset(i)); */
+        /*         final Cell[] cells */
+        /*             = new Cell[setSize]; */
+        /*         int i; */
+        /*         for (i = 0; i < cellNum - setSize; i += setSize) { */
+        /*             for (int j = 0; j < setSize; j++) { */
+        /*                 cells[j] = ((Cell) cellVector.atOffset(i + j)); */
+        /*             } */
         /*             processes.add(new Callable<Void>() { */
         /*                 @Override */
         /*                 public Void call() { */
-        /*                     cell.next(); */
+        /*                     for (int j = 0; j < setSize; j++) { */
+        /*                         cells[j].next(); */
+        /*                     } */
         /*                     return null; */
         /*                 } */
         /*             }); */
@@ -142,7 +155,12 @@ public class ModelSwarm extends SwarmImpl {
         /*         } catch (InterruptedException e) { */
         /*             throw new RuntimeException(e); */
         /*         } finally { */
-        /*             threadPool.shutdown(); */
+        /*         } */
+        /*  */
+        /*         for (; i < cellNum; i++) { */
+        /*             final Cell cell  */
+        /*                 = ((Cell) cellVector.atOffset(i)); */
+        /*             cell.next(); */
         /*         } */
         /*     } */
         /* } */
